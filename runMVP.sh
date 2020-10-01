@@ -14,7 +14,7 @@ while read p; do
         echo "Subject ID:" ${p} "is excluded"
     else
         echo "Submit spark batch job for subject ID:" ${p}
-        spark-submit --jars jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar --master spark://m5al0:7077 --total-executor-cores 2 --executor-memory 1G examples/src/main/python/pipeline_hcpopen_mvp.py hcp-openaccess ${p} hcpopen >& /tmp/${p}.log &
+        spark-submit --jars jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar --master spark://m5al0:7077 --total-executor-cores 2 --executor-memory 1G examples/src/main/python/pipeline_hcpopen_mvp.py -b hcp-openaccess -n ${p} -s hcpopen >& /tmp/${p}.log &
         sleep 1
     fi
 done < $filelist

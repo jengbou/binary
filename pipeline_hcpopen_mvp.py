@@ -5,35 +5,103 @@ Minimal Viable Project for Insight 2020C DE Project "BrainScans"
 """
 from __future__ import print_function
 
-import sys
 import os
 import io
+import argparse
 import gzip
 import boto3
 import matplotlib.pyplot as plt
 import nibabel as nib
+import numpy as np
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: pipeline_hcpopen_mvp <hcp bucket> <subject ID> <schema>",
-              file=sys.stderr)
-        sys.exit(-1)
+def parse_input_args():
+    """ Parse command line input arguments """
+    parser = argparse.ArgumentParser(description="main pipeline")
+    parser.add_argument('-b', dest='inbucket', default='hcp-openaccess',
+                        help="input bucket")
+    parser.add_argument('-n', dest='subjectid', default='101006',
+                        help="subject ID")
+    parser.add_argument('-s', dest='schema', default='hcpopen',
+                        help="schema for output postgres table")
+    args = parser.parse_args()
+    return args
 
-    hcpBucket = sys.argv[1]
-    subjectID = sys.argv[2]
-    subjectTab = "%s.test_subject_%s"%(sys.argv[3], subjectID)
+def get_s3obj(bktname, objkey, profile='default'):
+    """ helper to get object on aws s3"""
+    s3session = boto3.Session(profile_name=profile)
+    s3resource = s3session.resource('s3')
+    s3bucket = s3resource.Bucket(bktname)
+    s3obj = s3bucket.Object(objkey)
+    return s3obj
+
+def get_2dimg(s3obj, axis=1, begin=1, end=1, rot=0):
+    """ obtain slices of 2D images from nifti data"""
+    # get the images from 3s obj
+    response = s3obj.get()
+    zipfile = gzip.open(response['Body'])
+    iobyte = io.BytesIO(zipfile.read())
+    fholder = nib.FileHolder(fileobj=iobyte)
+    imgs = nib.Nifti1Image.from_file_map({'header': fholder, 'image': fholder})
+    imgdata = imgs.get_data()
+    print(imgs.shape)
+
+    # extract region of interest; slices from 'begin' to 'end' along 'axis'
+    # axis = 0: x-axis, 1: y-axis, 2: z-axis
+    if axis == 0:
+        imgdata = imgdata[int(begin):int(end), :, :]
+    elif axis == 1:
+        imgdata = imgdata[:, int(begin):int(end), :]
+    elif axis == 2:
+        imgdata = imgdata[:, :, int(begin):int(end)]
+    imgs = []
+    for j in range(imgdata.shape[axis]):
+        if axis == 0:
+            imgs.append(np.rot90(imgdata[j, :, :], rot))
+        elif axis == 1:
+            imgs.append(np.rot90(imgdata[:, j, :], rot))
+        elif axis == 2:
+            imgs.append(np.rot90(imgdata[:, :, j], rot))
+    return np.asarray(imgs)
+
+def norm_2dimg(imgs):
+    """ normalize 2D images gray scale to be between 0,1"""
+    gmax = np.max(imgs)
+    gmin = np.min(imgs)
+    imgs = (imgs - gmin) / (gmax - gmin)
+    return imgs
+
+def upload_2dimg(imgs, bktname, objdir, subid, profile='default'):
+    """ upload images to aws s3 """
+    s3session = boto3.Session(profile_name=profile)
+    s3resource = s3session.resource('s3')
+    s3bucket = s3resource.Bucket(bktname)
+    for i, val in enumerate(imgs):
+        plt.imshow(val, cmap="gray", origin="lower")
+        tmp = io.BytesIO()
+        plt.savefig(tmp, orientation='portrait', format='jpg')
+        tmp.seek(0)
+        s3bucket.put_object(Body=tmp, ContentType='image/jpg',
+                            Key=objdir+"/test_subject_%s_%i.jpg"%(subid, i),
+                            ACL='public-read')
+
+def main(args):
+    """ main function for processing HCP openaccess data set"""
+    inbucket = args.inbucket
+    subjectid = args.subjectid
+    subjtab = "%s.test_subject_%s"%(args.schema, subjectid)
+    dbmode = "overwrite"
 
     conf = SparkConf().setAppName("BrainScansMVP")
-    SC = SparkContext(conf=conf).getOrCreate()
+    sctx = SparkContext(conf=conf).getOrCreate()
     # specify which aws credential to use for hcp-openaccess s3 bucket
-    SC._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.getenv('HCP_ACCESS_KEY_ID'))
-    SC._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.getenv('HCP_SECRET_ACCESS_KEY'))
-    sqlContext = SQLContext(SC)
+    sctx._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.getenv('HCP_ACCESS_KEY_ID'))
+    sctx._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.getenv('HCP_SECRET_ACCESS_KEY'))
+    sqlctx = SQLContext(sctx)
 
     # connect to postgres
-    DBURL = "jdbc:postgresql://m5al0:1895/mydb"
+    dburl = "jdbc:postgresql://m5al0:1895/mydb"
     dboptions = {
         "driver": "org.postgresql.Driver",
         "user": "pg2conn",
@@ -41,38 +109,20 @@ if __name__ == "__main__":
         }
 
     # read the metadata about the MR scans to be processed
-    df = sqlContext.read.format("csv").options(header='true', delimiter=',', quotechar='"')\
-      .load("s3://%s/HCP_1200/%s/unprocessed/3T/%s_3T.csv"%(hcpBucket, subjectID, subjectID))
-
+    spdf = sqlctx.read.format("csv").options(header='true', delimiter=',', quotechar='"')\
+      .load("s3://%s/HCP_1200/%s/unprocessed/3T/%s_3T.csv"%(inbucket, subjectid, subjectid))
     # update PostgreSQL table
-    df.write.jdbc(url=DBURL, table=subjectTab, mode="overwrite", properties=dboptions)
+    spdf.write.jdbc(url=dburl, table=subjtab, mode=dbmode, properties=dboptions)
 
-    # specify which aws profile to use for hcp-openaccess s3 bucket
-    hcpSession = boto3.Session(profile_name="hcpopen")
-    hcpS3 = hcpSession.resource('s3')
-    hcpBucket = hcpS3.Bucket(hcpBucket)
-    objKey = "HCP_1200/%s/unprocessed/3T/T1w_MPR1/%s_3T_T1w_MPR1.nii.gz"%(subjectID, subjectID)
-    obj = hcpBucket.Object(objKey)
-    response = obj.get()
-    zz = gzip.open(response['Body'])
-    rr = zz.read()
-    bb = io.BytesIO(rr)
-    fh = nib.FileHolder(fileobj=bb)
-    img = nib.Nifti1Image.from_file_map({'header': fh, 'image': fh})
+    ### process nifti files from hcp open data
+    # specify the s3 obj key of hcp-openaccess file to be processed
+    hcpobj = "HCP_1200/%s/unprocessed/3T/T1w_MPR1/%s_3T_T1w_MPR1.nii.gz"%(subjectid, subjectid)
+    s3obj = get_s3obj(inbucket, hcpobj, "hcpopen")
+    images = get_2dimg(s3obj, 1, 135, 185)
+    print(images.shape)
+    images = norm_2dimg(images)
+    print("Scale range: (", np.min(images), ", ", np.max(images), ")")
+    upload_2dimg(images, "dataengexpspace", "data/mvp_output", subjectid)
 
-    print(img.shape)
-    img_data = img.get_data()
-    img_data = img_data[:, 135:185, :]
-
-    # get a new handle on s3 using default aws profile
-    s3 = boto3.resource('s3')
-    # get a handle on the bucket that holds output img files
-    bucket = s3.Bucket("dataengexpspace")
-    # upload the images
-    for i in range(img_data.shape[1]):
-        plt.imshow(img_data[:, i, :], cmap="gray", origin="lower")
-        tmp = io.BytesIO()
-        plt.savefig(tmp)
-        tmp.seek(0)
-        bucket.put_object(Body=tmp, ContentType='image/png',
-                          Key='data/mvp_output/test_subject_%s_%i.png'%(subjectID, i))
+if __name__ == "__main__":
+    main(parse_input_args())
