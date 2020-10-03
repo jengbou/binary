@@ -5,6 +5,7 @@ Minimal Viable Project for Insight 2020C DE Project "BrainScans"
 """
 from __future__ import print_function
 
+import io
 import os
 import re
 import urllib
@@ -15,18 +16,16 @@ from pyspark.sql import SQLContext
 def main():
     """ mathod to copy TCIA data to S3"""
     bktname = "dataengexpspace"
-    objdir = "data/TCIAData"
     datalist = "s3://dataengexpspace/data/TCIAData/ACRIN-DSC-MR-Brain.json"
     conf = SparkConf().setAppName("Move_TCIAData_to_S3")
     sctx = SparkContext(conf=conf).getOrCreate()
     sqlctx = SQLContext(sctx)
 
-    tciadf = sqlctx.read.json(datalist)
     tuplelist = [{"collection": x['Collection'], "subjectid": x['PatientID'],
                   "seriesdate": x['SeriesDate'], "seriesnum": x['SeriesNumber'],
                   "scantype": x['SeriesDescription'],
                   "studyuid": x['StudyInstanceUID'], "instanceuid": x['SeriesInstanceUID']}
-                 for x in tciadf.rdd.collect()]
+                 for x in sqlctx.read.json(datalist).rdd.collect()]
 
     s3client = boto3.client('s3',
                             aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -38,7 +37,9 @@ def main():
             row['instanceuid'])
         tmpfile = '/tmp/{}.zip'.format(row['instanceuid'])
         print("download file to: {}".format(tmpfile))
-        urllib.request.urlretrieve(apisyntx, tmpfile)
+        iobyte = io.BytesIO(urllib.request.urlopen(apisyntx, timeout=60).read())
+        with open(tmpfile, "wb") as ftmp:
+            ftmp.write(iobyte.getvalue())
         outfile = "{}/{}/{}-{}".format("NULL" if row['collection'] is None else row['collection'],
                                        "NULL" if row['subjectid'] is None else row['subjectid'],
                                        "NULL" if row['seriesdate'] is None else row['seriesdate'],
@@ -48,16 +49,21 @@ def main():
         if scantype is None:
             scantype = "NULL"
         else:
-            scantype = scantype.upper().replace(' ', '_')
-            scantype = re.sub(r'[*+]', '', scantype)
-            scantype = re.sub(r'C_{1}', '', scantype)
-            scantype = re.sub(r'_C{1}', '', scantype)
+            scantype = scantype.upper()
+            scantype = re.sub(r'[*]', '', scantype)
+            scantype = re.sub(r'[+]', '', scantype)
+            scantype = re.sub(r'\s+', '_', scantype)
+            scantype = re.sub(r'[?]*[/]', 'over', scantype)
+            scantype = re.sub(r'[/]{1}', '-', scantype)
+            scantype = re.sub(re.compile('[?]$'), '', scantype)
+            scantype = re.sub(re.compile('^[_]'), '', scantype)
+            scantype = re.sub(re.compile('[_]$'), '', scantype)
         outfile = "{}/{}-{}-{}".format(outfile,
                                        "NULL" if row['seriesnum'] is None else row['seriesnum'],
                                        scantype,
                                        "NULL" if row['instanceuid'] is None else \
                                            row['instanceuid'][len(row['studyuid'])-5:])
-        outfile = "{}/{}/blob.zip".format(objdir, outfile)
+        outfile = "{}/{}/blob.zip".format("data/TCIAData", outfile)
         print("upload to s3://{}/{}".format(bktname, outfile))
         response = s3client.upload_file(tmpfile, bktname, outfile)
         if response is not None:
