@@ -6,10 +6,9 @@ Usage: pyspark < run_tcia.py
 """
 from __future__ import print_function
 
-import os
-import sys
 import time
 import logging
+import subprocess
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 
@@ -39,17 +38,14 @@ if __name__ == "__main__":
 
     tuplelist = [{"instanceuid": x['SeriesInstanceUID'], "s3key": x['S3objkey']}
                  for x in sqlctx.read.json(DATALIST).rdd.collect()]
-    COUNT = 0
+
     for row in tuplelist:
         tciaobj = row['s3key']
         if not is_roi(tciaobj):
             continue
-        COUNT += 1
-        if COUNT == 10:
-            sys.exit()
 
-        SPKCMD = "spark-submit --jars {} --master {} --total-executor-cores 2\
-        --executor-memory 1G {} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
+        SPKCMD = "spark-submit --jars {} --master {} --total-executor-cores 2 "\
+                 "--executor-memory 1G {} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
           .format("jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar",
                   "spark://m5al0:7077",
                   "examples/src/main/python/pipeline_tcia.py",
@@ -62,5 +58,6 @@ if __name__ == "__main__":
                       tciaobj.replace("/blob.zip", "").replace("/", "-"))
                  )
         logging.info("Submit job: %s", SPKCMD)
-        os.system(SPKCMD)
+        p = subprocess.Popen(SPKCMD, shell=True)
+        p.wait()
         time.sleep(0.1)
