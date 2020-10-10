@@ -29,6 +29,10 @@ def main():
     tmpdf = tmpdf.withColumn('ShortInstanceUID', col('SeriesInstanceUID').substr(60, 5))
     tmpdf = tmpdf.withColumn('SeriesDescription', upper(col('SeriesDescription')))
     tmpdf = tmpdf.withColumn('SeriesDescription', regexp_replace('SeriesDescription',
+                                                                 r'[(]', ''))
+    tmpdf = tmpdf.withColumn('SeriesDescription', regexp_replace('SeriesDescription',
+                                                                 r'[)]', ''))
+    tmpdf = tmpdf.withColumn('SeriesDescription', regexp_replace('SeriesDescription',
                                                                  r'[*]', ''))
     tmpdf = tmpdf.withColumn('SeriesDescription', regexp_replace('SeriesDescription',
                                                                  r'[+]', ''))
@@ -45,7 +49,7 @@ def main():
     tmpdf = tmpdf.withColumn('SeriesDescription', regexp_replace('SeriesDescription',
                                                                  r'[_]$', ''))
 
-    tmpdf = tmpdf.withColumn('S3objkey', concat(lit('data/TCIAData_p2/'),
+    tmpdf = tmpdf.withColumn('S3objkey', concat(lit('data/TCIAData_p3/'),
                                                 col('Collection'), lit('/'),
                                                 col('PatientID'), lit('/'),
                                                 col('SeriesDate'), lit('-'),
@@ -65,7 +69,7 @@ def main():
     tmpname = glob.glob('/tmp/tmpdfjson/*.json')[0]
     print(tmpname)
     response = s3client.upload_file(tmpname, bktname,
-                                    "data/TCIAData/metadata/filelist_p2.json")
+                                    "data/TCIAData/metadata/filelist_p3.json")
     if response is not None:
         print(">>>>>>> Upload problem for file: ", tmpname)
     print("remove tmp file: {}".format(tmpname))

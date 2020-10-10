@@ -31,7 +31,7 @@ if __name__ == "__main__":
     SCHEMA = "tciatest"
 
     logging.basicConfig(filename=LOGFILE, filemode='w', level=logging.INFO)
-    DATALIST = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p2.json"
+    DATALIST = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
     conf = SparkConf().setAppName("run_ETL_TCIAData")
     SCTX = SparkContext(conf=conf).getOrCreate()
     sqlctx = SQLContext(SCTX)
@@ -44,10 +44,10 @@ if __name__ == "__main__":
         if not is_roi(tciaobj):
             continue
 
-        SPKCMD = "spark-submit --jars {} --master {} --total-executor-cores 2 "\
+        SPKCMD = "spark-submit --jars {} --master {} --total-executor-cores 1 "\
                  "--executor-memory 1G {} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
           .format("jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar",
-                  "spark://m5al0:7077",
+                  "spark://m5a2x0:7077",
                   "examples/src/main/python/pipeline_tcia.py",
                   "dataengexpspace",
                   tciaobj,

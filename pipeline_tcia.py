@@ -42,7 +42,7 @@ def main(args):
     sqlctx = SQLContext(sctx)
 
     # connect to postgres
-    opts['dburl'] = "jdbc:postgresql://m5al0:1895/mydb"
+    opts['dburl'] = "jdbc:postgresql://m5a2x0:1895/mydb"
     opts['dboptions'] = {
         "driver": "org.postgresql.Driver",
         "user": "pg2conn",
@@ -85,7 +85,8 @@ def main(args):
         images = norm_2dimg(images)
         logging.info("Scale range: (%i, %i)", np.min(images), np.max(images))
         tmptag = niifile.split("/")
-        opts['outtag'] = tmptag[len(tmptag) - 1].replace(".nii.gz", "")
+        opts['outtag'] = tmptag[len(tmptag) - 1].replace(".nii.gz", "")\
+          .replace("(", "").replace(")", "")
         # write to db:
         update_db(sqlctx, metadata, images, opts)
         # upload to s3

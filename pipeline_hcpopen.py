@@ -42,7 +42,7 @@ def main(args):
     sqlctx = SQLContext(sctx)
 
     # connect to postgres
-    dburl = "jdbc:postgresql://m5al0:1895/mydb"
+    dburl = "jdbc:postgresql://m5a2x0:1895/mydb"
     dboptions = {
         "driver": "org.postgresql.Driver",
         "user": "pg2conn",

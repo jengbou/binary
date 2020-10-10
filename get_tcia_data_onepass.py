@@ -55,6 +55,8 @@ def main():
             scantype = re.sub(r'\s+', '_', scantype)
             scantype = re.sub(r'[?]*[/]', 'over', scantype)
             scantype = re.sub(r'[/]{1}', '-', scantype)
+            scantype = re.sub(r'[(]', '', scantype)
+            scantype = re.sub(r'[)]', '', scantype)
             scantype = re.sub(re.compile('[?]$'), '', scantype)
             scantype = re.sub(re.compile('^[_]'), '', scantype)
             scantype = re.sub(re.compile('[_]$'), '', scantype)
