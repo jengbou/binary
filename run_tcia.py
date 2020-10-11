@@ -28,7 +28,7 @@ def is_roi(tobj):
 
 if __name__ == "__main__":
     LOGFILE = "run_tcia.log"
-    SCHEMA = "tciatest"
+    SCHEMA = "tcia"
 
     logging.basicConfig(filename=LOGFILE, filemode='w', level=logging.INFO)
     DATALIST = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
