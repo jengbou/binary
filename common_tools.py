@@ -31,7 +31,7 @@ def get_2dimg(s3obj, axis=1, begin=1, end=1, rot=0):
     iobyte = io.BytesIO(zipfile.read())
     fholder = nib.FileHolder(fileobj=iobyte)
     imgs = nib.Nifti1Image.from_file_map({'header': fholder, 'image': fholder})
-    imgdata = imgs.get_data()
+    imgdata = imgs.get_fdata()
     logging.info(imgs.shape)
 
     # extract region of interest; slices from 'begin' to 'end' along 'axis'
@@ -59,7 +59,7 @@ def get_2dimg_cent(s3obj, axis=1, nslices=-1, rot=0):
     fholder = nib.FileHolder(fileobj=iobyte)
     imgs = nib.Nifti1Image.from_file_map({'header': fholder, 'image': fholder})
     header = imgs.header
-    imgdata = imgs.get_data()
+    imgdata = imgs.get_fdata()
     logging.info(imgs.shape)
 
     # extract region of interest; slices from 'begin' to 'end' along 'axis'
@@ -129,7 +129,7 @@ def get_2dimg_dcm2niix(filename, rot=0):
     independent of its original direction.
     """
     imgs = nib.load(filename)
-    imgdata = imgs.get_data()
+    imgdata = imgs.get_fdata()
     logging.info("shape: %s; dim: %i", imgs.shape, len(imgs.shape))
     if len(imgs.shape) != 3:
         logging.info("Skipped %s", filename)
