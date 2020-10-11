@@ -20,6 +20,8 @@ def parse_input_args():
                         help="input bucket")
     parser.add_argument('-o', dest='outbucket', default='dataengexpspace',
                         help="input bucket")
+    parser.add_argument('-d', dest='outs3subdir', default='data/HCP_output',
+                        help="output s3 subfolder")
     parser.add_argument('-n', dest='subjectid', default='101006',
                         help="subject ID")
     parser.add_argument('-s', dest='schema', default='hcpopen',
@@ -36,7 +38,6 @@ def main(args):
     opts['inbucket'] = args.inbucket
     opts['subjectid'] = args.subjectid
     opts['schema'] = args.schema
-    ## subjtab = "{}.test_subject_{}".format(opts['schema'], opts['subjectid'])
     opts['dbmode'] = "overwrite"
 
     conf = SparkConf().setAppName("ETL_HCPData")
@@ -54,7 +55,7 @@ def main(args):
         "password": os.getenv('DB_SELECT_PASSWD')
         }
     opts['otags'] = "hcp_subject_%s"%opts['subjectid']
-    opts['jpgkey'] = "data/HCP_test_output/{}".format(opts['otags'])
+    opts['jpgkey'] = "{}/{}".format(args.outs3subdir, opts['otags'])
 
     ### process nifti files from hcp open data
     # specify the s3 obj key of hcp-openaccess file to be processed

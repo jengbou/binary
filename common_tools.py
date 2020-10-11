@@ -127,6 +127,7 @@ def get_2dimg_dcm2niix(filename, rot=0):
     Note: in contrast to nii.gz files from HCP open data,
     dcm2niix organizes the images to use 'z' axis as slice ordering
     independent of its original direction.
+    Note: raw data with filename containing "IRPREP" use 'x' axis as slice ordering
     """
     imgs = nib.load(filename)
     imgdata = imgs.get_fdata()
@@ -137,8 +138,13 @@ def get_2dimg_dcm2niix(filename, rot=0):
     # extract all slices along an axis
     imgdata = imgdata[:, :, :]
     imgs = []
-    for j in range(imgdata.shape[2]):
-        imgs.append(np.rot90(imgdata[:, :, j], rot))
+    if filename.upper().find('IRPREP') != -1:
+        for j in range(imgdata.shape[0]):
+            imgs.append(np.rot90(imgdata[j, :, :], rot))
+    else:
+        for j in range(imgdata.shape[2]):
+            imgs.append(np.rot90(imgdata[:, :, j], rot))
+
     return np.asarray(imgs)
 
 def update_db_tcia(sqlcontext, metas, imgs, opts):

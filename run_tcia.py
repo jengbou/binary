@@ -27,17 +27,22 @@ def is_roi(tobj):
     return selected
 
 if __name__ == "__main__":
-    LOGFILE = "run_tcia.log"
-    SCHEMA = "tcia"
+    opts = {}
+    opts['schema'] = "tcia_v1"
+    opts['outs3subdir'] = "data/TCIA_output_v1"
+    opts['filelist'] = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
+    opts['master'] = "spark://m5a2x0:7077"
+    opts['pyfile'] = "examples/src/main/python/pipeline_tcia.py"
+    opts['bktname'] = "dataengexpspace"
+    opts['logfile'] = "run_tcia.log"
 
-    logging.basicConfig(filename=LOGFILE, filemode='w', level=logging.INFO)
-    DATALIST = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
+    logging.basicConfig(filename=opts['logfile'], filemode='w', level=logging.INFO)
     conf = SparkConf().setAppName("run_ETL_TCIAData")
     SCTX = SparkContext(conf=conf).getOrCreate()
     sqlctx = SQLContext(SCTX)
 
     tuplelist = [{"instanceuid": x['SeriesInstanceUID'], "s3key": x['S3objkey']}
-                 for x in sqlctx.read.json(DATALIST).rdd.collect()]
+                 for x in sqlctx.read.json(opts['filelist']).rdd.collect()]
 
     UIPORT = 4050
     for row in tuplelist:
@@ -48,14 +53,15 @@ if __name__ == "__main__":
         SPKCMD = "spark-submit --jars {} --master {} "\
           "--conf spark.ui.port={} "\
           "--total-executor-cores 1 --executor-memory 1G "\
-          "{} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
+          "{} -b {} -d {} -k {} -s {} -l {} > {} 2>&1 &"\
           .format("jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar",
-                  "spark://m5a2x0:7077",
+                  opts['master'],
                   UIPORT,
-                  "examples/src/main/python/pipeline_tcia.py",
-                  "dataengexpspace",
+                  opts['pyfile'],
+                  opts['bktname'],
+                  opts['outs3subdir'],
                   tciaobj,
-                  SCHEMA,
+                  opts['schema'],
                   "/tmp/pipeline_tcia_{}.log".format(
                       tciaobj.replace("/blob.zip", "").replace("/", "-")),
                   "/tmp/run_tcia_{}.log".format(

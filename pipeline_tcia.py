@@ -23,6 +23,8 @@ def parse_input_args():
     parser = argparse.ArgumentParser(description="tcia pipeline")
     parser.add_argument('-b', dest='inbucket', default='dataengexpspace',
                         help="input bucket")
+    parser.add_argument('-d', dest='outs3subdir', default='data/TCIA_output',
+                        help="output s3 subfolder")
     parser.add_argument('-k', dest='ins3key', default='',
                         help="input s3 object key")
     parser.add_argument('-l', dest='logfile', default='pipeline_tcia.log',
@@ -69,7 +71,7 @@ def main(args):
     os.system("dcm2niix -ba n -z y -f %i_3T_%d -o {} {}".format(opts['tmpdir'], opts['tmpdir']))
     niifiles = glob.glob("{}/*.nii.gz".format(opts['tmpdir']))
     logging.info(">>>>>>> nifti files: %s", niifiles)
-    opts['jpgkey'] = "data/TCIA_test_output/{}".format(opts['otags'])
+    opts['jpgkey'] = "{}/{}".format(args.outs3subdir, opts['otags'])
     for niifile in niifiles:
         logging.info("------> processing file: %s", niifile)
         # read the metadata about the MR scans to be processed
