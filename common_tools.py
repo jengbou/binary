@@ -52,6 +52,54 @@ def get_2dimg(s3obj, axis=1, begin=1, end=1, rot=0):
             imgs.append(np.rot90(imgdata[:, :, j], rot))
     return np.asarray(imgs)
 
+def get_2dimg_cent(s3obj, axis=1, nslices=-1, rot=0):
+    """ obtain central slices of 2D images from nifti data"""
+    # get the images from 3s obj
+    iobyte = io.BytesIO(gzip.open(s3obj.get()['Body']).read())
+    fholder = nib.FileHolder(fileobj=iobyte)
+    imgs = nib.Nifti1Image.from_file_map({'header': fholder, 'image': fholder})
+    header = imgs.header
+    imgdata = imgs.get_data()
+    logging.info(imgs.shape)
+
+    # extract region of interest; slices from 'begin' to 'end' along 'axis'
+    # axis = 0: x-axis (sagittal), 1: y-axis (coronal), 2: z-axis (axial)
+    # in header['dim'] 1: x-axis, 2: y- axis, 3: z-axis
+    begin = 0
+    end = header['dim'][axis + 1] - 1
+    if nslices != -1:
+        nslices /= 2
+        middle = header['dim'][axis + 1] / 2
+        begin = middle - nslices
+        end = middle + nslices
+    if begin < 0:
+        begin = 0
+    if end >= header['dim'][axis + 1]:
+        end = header['dim'][axis + 1] - 1
+    resx = header['pixdim'][2]
+    resy = header['pixdim'][3]
+    ## get the slices
+    logging.info("Slice range: %i to %i", begin, end)
+    if axis == 0:
+        imgdata = imgdata[int(begin):int(end), :, :]
+    elif axis == 1:
+        imgdata = imgdata[:, int(begin):int(end), :]
+        resx = header['pixdim'][1]
+        resy = header['pixdim'][3]
+    elif axis == 2:
+        imgdata = imgdata[:, :, int(begin):int(end)]
+        resx = header['pixdim'][1]
+        resy = header['pixdim'][2]
+    imgs = []
+    for j in range(imgdata.shape[axis]):
+        if axis == 0:
+            imgs.append(np.rot90(imgdata[j, :, :], rot))
+        elif axis == 1:
+            imgs.append(np.rot90(imgdata[:, j, :], rot))
+        elif axis == 2:
+            imgs.append(np.rot90(imgdata[:, :, j], rot))
+    return np.asarray(imgs), [resx, resy]
+
 def norm_2dimg(imgs):
     """ normalize 2D images gray scale to be between 0,1"""
     gmax = np.max(imgs)
@@ -93,8 +141,8 @@ def get_2dimg_dcm2niix(filename, rot=0):
         imgs.append(np.rot90(imgdata[:, :, j], rot))
     return np.asarray(imgs)
 
-def update_db(sqlcontext, metas, imgs, opts):
-    """ Method to update db"""
+def update_db_tcia(sqlcontext, metas, imgs, opts):
+    """ Method to update db (TCIA)"""
     links = []
     for i, _ in enumerate(imgs):
         links.append('https://dataengexpspace.s3.amazonaws.com/{}'.format(
@@ -116,6 +164,32 @@ def update_db(sqlcontext, metas, imgs, opts):
     # update PostgreSQL table
     subjtab = "{}.{}".format(opts['schema'], re.sub(r'\W', '_', opts['otags']\
                                                 .replace('ACRIN-DSC-MR-Brain-', 'subject')))
+    logging.info("======> subjtab: %s", subjtab)
+    spdf.write.jdbc(url=opts['dburl'], table=subjtab,
+                    mode=opts['dbmode'], properties=opts['dboptions'])
+
+def update_db_hcp(sqlcontext, imgs, opts):
+    """ Method to update db (HCP openaccess)"""
+    links = []
+    for i, _ in enumerate(imgs):
+        links.append('https://dataengexpspace.s3.amazonaws.com/{}'.format(
+            urllib.parse.quote("{}/{}_{}.jpg".format(opts['jpgkey'], opts['outtag'], i))))
+
+    otable = [("{}".format(opts['subjectid']),
+               "{}".format('NORECORD'),
+               "{}".format('SIEMENS'),
+               "{}".format('SKYRA'),
+               "{}".format(opts['resx']),
+               "{}".format(opts['resy']),
+               links
+              )]
+
+    spdf = sqlcontext.createDataFrame(otable, [
+        'series instance uid', 'series date', 'manufacturer',
+        'manufacturer model name', 'pixel spacing-x', 'pixel spacing-y', 'jpgfiles'])
+
+    # update PostgreSQL table
+    subjtab = "{}.{}".format(opts['schema'], opts['outtag'])
     logging.info("======> subjtab: %s", subjtab)
     spdf.write.jdbc(url=opts['dburl'], table=subjtab,
                     mode=opts['dbmode'], properties=opts['dboptions'])

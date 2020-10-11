@@ -39,15 +39,19 @@ if __name__ == "__main__":
     tuplelist = [{"instanceuid": x['SeriesInstanceUID'], "s3key": x['S3objkey']}
                  for x in sqlctx.read.json(DATALIST).rdd.collect()]
 
+    UIPORT = 4050
     for row in tuplelist:
         tciaobj = row['s3key']
         if not is_roi(tciaobj):
             continue
 
-        SPKCMD = "spark-submit --jars {} --master {} --total-executor-cores 1 "\
-                 "--executor-memory 1G {} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
+        SPKCMD = "spark-submit --jars {} --master {} "\
+          "--conf spark.ui.port={} "\
+          "--total-executor-cores 1 --executor-memory 1G "\
+          "{} -b {} -k {} -s {} -l {} > {} 2>&1 &"\
           .format("jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar",
                   "spark://m5a2x0:7077",
+                  UIPORT,
                   "examples/src/main/python/pipeline_tcia.py",
                   "dataengexpspace",
                   tciaobj,
@@ -61,3 +65,4 @@ if __name__ == "__main__":
         p = subprocess.Popen(SPKCMD, shell=True)
         p.wait()
         time.sleep(0.1)
+        UIPORT += 1

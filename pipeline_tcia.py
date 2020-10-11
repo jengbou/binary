@@ -16,7 +16,7 @@ import pydicom
 import numpy as np
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
-from common_tools import norm_2dimg, upload_2dimg, update_db, get_2dimg_dcm2niix
+from common_tools import norm_2dimg, upload_2dimg, update_db_tcia, get_2dimg_dcm2niix
 
 def parse_input_args():
     """ Parse command line input arguments """
@@ -88,7 +88,7 @@ def main(args):
         opts['outtag'] = tmptag[len(tmptag) - 1].replace(".nii.gz", "")\
           .replace("(", "").replace(")", "")
         # write to db:
-        update_db(sqlctx, metadata, images, opts)
+        update_db_tcia(sqlctx, metadata, images, opts)
         # upload to s3
         logging.info("======> Upload images to s3://%s/%s/%s_*.jpg",
                      opts['bktname'], opts['jpgkey'], opts['outtag'])
