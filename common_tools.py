@@ -121,13 +121,19 @@ def upload_2dimg(imgs, bktname, objdir, outtag, profile='default'):
                             Key=objdir+"/%s_%i.jpg"%(outtag, i),
                             ACL='public-read')
 
-def get_2dimg_dcm2niix(filename, rot=0):
+def get_2dimg_dcm2niix(filename):
     """
     Obtain slices of 2D images from nii.gz file produced by dcm2niix
     Note: in contrast to nii.gz files from HCP open data,
-    dcm2niix organizes the images to use 'z' axis as slice ordering
-    independent of its original direction.
-    Note: raw data with filename containing "IRPREP" use 'x' axis as slice ordering
+    TCIA data didn't use consistent approach in choosing slice ordering.
+    Some used 'z' as slicing direction independent of scan axis,
+    whle others adapt similar convention as HCP did.
+    For example, raw data with filename containing "IRPREP" or "SAG_FSPGR"
+    use 'x' axis as slice ordering.
+    Another example, filenames with "COR_FSPGR_3D" use 'y' axis while
+    with "COR_FSPGR" use 'z' axis.
+    Fortunately, the number of slices along the scan direction is the minimum one.
+    Therefore, the code finds the axis accordingly.
     """
     imgs = nib.load(filename)
     imgdata = imgs.get_fdata()
@@ -135,15 +141,25 @@ def get_2dimg_dcm2niix(filename, rot=0):
     if len(imgs.shape) != 3:
         logging.info("Skipped %s", filename)
         return None
-    # extract all slices along an axis
     imgdata = imgdata[:, :, :]
+
+    # find the axis to extract slices
+    nslices = np.min(imgdata.shape)
+    axis = 0
+    for i in range(3):
+        if imgdata.shape[i] == nslices:
+            axis = i
+            break
+
+    # extract all slices along an axis
     imgs = []
-    if filename.upper().find('IRPREP') != -1:
-        for j in range(imgdata.shape[0]):
-            imgs.append(np.rot90(imgdata[j, :, :], rot))
-    else:
-        for j in range(imgdata.shape[2]):
-            imgs.append(np.rot90(imgdata[:, :, j], rot))
+    for j in range(imgdata.shape[axis]):
+        if axis == 0:
+            imgs.append(imgdata[j, :, :])
+        elif axis == 1:
+            imgs.append(imgdata[:, j, :])
+        elif axis == 2:
+            imgs.append(imgdata[:, :, j])
 
     return np.asarray(imgs)
 
