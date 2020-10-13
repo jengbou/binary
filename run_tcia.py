@@ -32,7 +32,7 @@ if __name__ == "__main__":
     opts['outs3subdir'] = "data/TCIA_output_v1"
     opts['filelist'] = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
     opts['master'] = "spark://m5a2x0:7077"
-    opts['pyfile'] = "examples/src/main/python/pipeline_tcia.py"
+    opts['pyfile'] = "src/pipeline_tcia.py"
     opts['bktname'] = "dataengexpspace"
     opts['logfile'] = "run_tcia.log"
 

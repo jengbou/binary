@@ -19,7 +19,7 @@ if __name__ == "__main__":
     opts['outs3subdir'] = "data/HCP_output_v1"
     opts['filelist'] = "/usr/local/spark-2.4.3-bin-hadoop2.7/datasets/hcp_1200_subjectid.txt"
     opts['master'] = "spark://m5a2x0:7077"
-    opts['pyfile'] = "examples/src/main/python/pipeline_hcpopen.py"
+    opts['pyfile'] = "src/pipeline_hcpopen.py"
     opts['inbktname'] = "hcp-openaccess"
     opts['outbktname'] = "dataengexpspace"
     opts['logfile'] = "run_hcpopen_v1.log"
