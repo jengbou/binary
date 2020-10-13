@@ -6,6 +6,7 @@ Usage: pyspark < run_tcia.py
 """
 from __future__ import print_function
 
+import sys
 import time
 import logging
 import subprocess
@@ -20,7 +21,7 @@ def is_roi(tobj):
         logging.info('>>>>>>> Slices along sagittal direction')
     elif tobj.find('COR') != -1:
         logging.info('>>>>>>> Slices along coronal direction')
-    elif tobj.find('AXIAL') != -1 or tobj.find('_AX_') != -1:
+    elif tobj.find('AXIAL') != -1 or tobj.find('AX_') != -1:
         logging.info('>>>>>>> Slices along axial direction')
     else:
         selected = False
@@ -28,13 +29,13 @@ def is_roi(tobj):
 
 if __name__ == "__main__":
     opts = {}
-    opts['schema'] = "tcia_v1"
-    opts['outs3subdir'] = "data/TCIA_output_v1"
+    opts['schema'] = "tcia_v2"
+    opts['outs3subdir'] = "data/TCIA_output_v2"
     opts['filelist'] = "s3://dataengexpspace/data/TCIAData/metadata/filelist_p3.json"
     opts['master'] = "spark://m5a2x0:7077"
     opts['pyfile'] = "src/pipeline_tcia.py"
     opts['bktname'] = "dataengexpspace"
-    opts['logfile'] = "run_tcia.log"
+    opts['logfile'] = "run_tcia_v2.log"
 
     logging.basicConfig(filename=opts['logfile'], filemode='w', level=logging.INFO)
     conf = SparkConf().setAppName("run_ETL_TCIAData")

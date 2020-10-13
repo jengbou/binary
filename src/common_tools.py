@@ -170,8 +170,20 @@ def update_db_tcia(sqlcontext, metas, imgs, opts):
         links.append('https://dataengexpspace.s3.amazonaws.com/{}'.format(
             urllib.parse.quote("{}/{}_{}.jpg".format(opts['jpgkey'], opts['outtag'], i))))
 
+    scanaxis = ''
+    if opts['tciaobj'].upper().find('SAG') != -1:
+        scanaxis = 'sag'
+    elif opts['tciaobj'].upper().find('COR') != -1:
+        scanaxis = 'cor'
+    elif opts['tciaobj'].upper().find('AXIAL') != -1 or opts['tciaobj'].upper().find('AX_') != -1:
+        scanaxis = 'ax'
+    else:
+        scanaxis = 'other_{}'.format(re.sub(r'\W', '_', opts['otags'])\
+                                         .replace('ACRIN-DSC-MR-Brain-', 'subject'))
+
     otable = [("{}".format(metas.SeriesInstanceUID),
                "{}".format(metas.SeriesDate),
+               "{}".format(scanaxis),
                "{}".format(metas.Manufacturer),
                "{}".format(metas.ManufacturerModelName),
                "{}".format(metas.PixelSpacing[0]),
@@ -180,12 +192,13 @@ def update_db_tcia(sqlcontext, metas, imgs, opts):
               )]
 
     spdf = sqlcontext.createDataFrame(otable, [
-        'series instance uid', 'series date', 'manufacturer',
+        'series instance uid', 'series date', 'scan axis', 'manufacturer',
         'manufacturer model name', 'pixel spacing-x', 'pixel spacing-y', 'jpgfiles'])
 
     # update PostgreSQL table
-    subjtab = "{}.{}".format(opts['schema'], re.sub(r'\W', '_', opts['otags']\
-                                                .replace('ACRIN-DSC-MR-Brain-', 'subject')))
+    ## subjtab = "{}.{}".format(opts['schema'], re.sub(r'\W', '_', opts['otags']\
+    ##                                             .replace('ACRIN-DSC-MR-Brain-', 'subject')))
+    subjtab = "{}.{}".format(opts['schema'], scanaxis)
     logging.info("======> subjtab: %s", subjtab)
     spdf.write.jdbc(url=opts['dburl'], table=subjtab,
                     mode=opts['dbmode'], properties=opts['dboptions'])
@@ -199,6 +212,7 @@ def update_db_hcp(sqlcontext, imgs, opts):
 
     otable = [("{}".format(opts['subjectid']),
                "{}".format('NORECORD'),
+               "{}".format(opts['scanaxis']),
                "{}".format('SIEMENS'),
                "{}".format('SKYRA'),
                "{}".format(opts['resx']),
@@ -207,11 +221,11 @@ def update_db_hcp(sqlcontext, imgs, opts):
               )]
 
     spdf = sqlcontext.createDataFrame(otable, [
-        'series instance uid', 'series date', 'manufacturer',
+        'series instance uid', 'series date', 'scan axis', 'manufacturer',
         'manufacturer model name', 'pixel spacing-x', 'pixel spacing-y', 'jpgfiles'])
 
     # update PostgreSQL table
-    subjtab = "{}.{}".format(opts['schema'], opts['outtag'])
+    subjtab = "{}.{}".format(opts['schema'], opts['scanaxis'])
     logging.info("======> subjtab: %s", subjtab)
     spdf.write.jdbc(url=opts['dburl'], table=subjtab,
                     mode=opts['dbmode'], properties=opts['dboptions'])

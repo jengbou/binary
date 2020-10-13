@@ -38,7 +38,7 @@ def main(args):
     opts['inbucket'] = args.inbucket
     opts['subjectid'] = args.subjectid
     opts['schema'] = args.schema
-    opts['dbmode'] = "overwrite"
+    opts['dbmode'] = "append"
 
     conf = SparkConf().setAppName("ETL_HCPData")
     sctx = SparkContext(conf=conf).getOrCreate()
@@ -73,6 +73,7 @@ def main(args):
         images = norm_2dimg(images)
         logging.info("Scale range: (%i, %i)", np.min(images), np.max(images))
         opts['outtag'] = "subject{}_3T_T1w_MPR1_{}".format(opts['subjectid'], atag)
+        opts['scanaxis'] = atag
         # write metadata to db:
         update_db_hcp(sqlctx, images, opts)
         # upload images to s3

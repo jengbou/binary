@@ -50,21 +50,21 @@ def main(args):
         "user": "pg2conn",
         "password": os.getenv('DB_SELECT_PASSWD')
         }
-    opts['dbmode'] = "overwrite"
+    opts['dbmode'] = "append"
     opts['schema'] = args.schema
     s3client = boto3.client('s3',
                             aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                             aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
 
-    tciaobj = args.ins3key
-    opts['otags'] = '@'.join(tciaobj.replace("/blob.zip", "").split("/")[3:])
+    opts['tciaobj'] = args.ins3key
+    opts['otags'] = '@'.join(opts['tciaobj'].replace("/blob.zip", "").split("/")[3:])
     opts['tmpdir'] = "/tmp/{}".format(opts['otags'])
     try:
         os.makedirs(opts['tmpdir'])
     except OSError:
         pass
     # download blob.zip from s3
-    s3client.download_file(opts['bktname'], tciaobj, "{}/blob.zip".format(opts['tmpdir']))
+    s3client.download_file(opts['bktname'], opts['tciaobj'], "{}/blob.zip".format(opts['tmpdir']))
     # unzip files to a temp dir
     ZipFile("{}/blob.zip".format(opts['tmpdir']), 'r').extractall(opts['tmpdir'])
     # combine and transform the dcm files into a json and a nii.gz
