@@ -44,15 +44,20 @@ if __name__ == "__main__":
     tuplelist = [{"instanceuid": x['SeriesInstanceUID'], "s3key": x['S3objkey']}
                  for x in sqlctx.read.json(opts['filelist']).rdd.collect()]
 
+    COUNT = 0
     UIPORT = 4050
     for row in tuplelist:
         tciaobj = row['s3key']
         if not is_roi(tciaobj):
             continue
-
+        COUNT += 1
+        ## if COUNT <= 200:
+        ##     continue
+        ## if COUNT == 1000:
+        ##     sys.exit()
         SPKCMD = "spark-submit --jars {} --master {} "\
           "--conf spark.ui.port={} "\
-          "--total-executor-cores 1 --executor-memory 1G "\
+          "--total-executor-cores 1 --executor-memory 2G "\
           "{} -b {} -d {} -k {} -s {} -l {} > {} 2>&1 &"\
           .format("jars/aws-java-sdk-1.7.4.jar,jars/hadoop-aws-2.7.7.jar",
                   opts['master'],
@@ -72,3 +77,8 @@ if __name__ == "__main__":
         p.wait()
         time.sleep(0.1)
         UIPORT += 1
+        if COUNT % 20 == 0:
+            time.sleep(1200)
+        if COUNT % 200 == 0:
+            UIPORT = 4050
+            time.sleep(600)
