@@ -34,7 +34,7 @@ if __name__ == "__main__":
     subjlist = open(opts['filelist'], 'r').readlines()
     for line in subjlist:
         COUNT += 1
-        ## if COUNT <= 200:
+        ## if COUNT < 200:
         ##     continue
         ## if COUNT == 1000:
         ##     sys.exit()
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         time.sleep(0.1)
         UIPORT += 1
         if COUNT % 20 == 0:
-            time.sleep(1200)
+            time.sleep(2400)
         if COUNT % 200 == 0:
             UIPORT = 4050
             time.sleep(600)

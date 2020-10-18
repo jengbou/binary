@@ -120,6 +120,7 @@ def upload_2dimg(imgs, bktname, objdir, outtag, profile='default'):
         s3bucket.put_object(Body=tmp, ContentType='image/jpg',
                             Key=objdir+"/%s_%i.jpg"%(outtag, i),
                             ACL='public-read')
+        tmp.close()
 
 def get_2dimg_dcm2niix(filename):
     """

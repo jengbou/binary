@@ -52,7 +52,7 @@ if __name__ == "__main__":
         if not is_roi(tciaobj):
             continue
         COUNT += 1
-        ## if COUNT <= 200:
+        ## if COUNT < 200:
         ##     continue
         ## if COUNT == 1000:
         ##     sys.exit()
