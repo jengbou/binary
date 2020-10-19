@@ -5,6 +5,7 @@ RESTful API app
 """
 
 from io import BytesIO
+import urllib.parse
 import time
 import zipfile
 import logging
@@ -41,6 +42,7 @@ class Image(Resource):
         with zipfile.ZipFile(mem_file, 'w') as tmpf:
             for row in rows:
                 for img in row.images:
+                    img = urllib.parse.unquote(img)
                     logging.debug('Resource: [Image] >>> zipping file %s', img)
                     data = zipfile.ZipInfo(img)
                     data.date_time = time.localtime(time.time())[:6]
