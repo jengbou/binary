@@ -3,6 +3,7 @@ Author: Geng-Yuan Jeng <jeengbou@gmail.com>
 Insight 2020C DE Project "BINARY: Brain Image graNARY"
 RESTful API app
 """
+
 from flask_jwt import jwt_required
 from sqlalchemy.dialects.postgresql import ARRAY
 from mydb import db
@@ -44,4 +45,4 @@ class ImageModel(db.Model):
     @classmethod
     def find_by_name(cls, name):
         """ Method to extract image object in db by name """
-        return cls.query.filter_by(name=name).first()
+        return cls.query.filter_by(name=name).all()

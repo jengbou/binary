@@ -3,6 +3,7 @@ Author: Geng-Yuan Jeng <jeengbou@gmail.com>
 Insight 2020C DE Project "BINARY: Brain Image graNARY"
 RESTful API app
 """
+
 from io import BytesIO
 import time
 import zipfile
@@ -27,26 +28,27 @@ class Image(Resource):
 
     def get(self, name):
         """ API GET """
-        logging.info('Resource: [Image] >>> Getting file {}'.format(name))
-        image = ImageModel.find_by_name(name)
-        if image:
-            return Image.download_files(image.json())
+        logging.info('Resource: [Image] >>> Getting file %s', name)
+        images = ImageModel.find_by_name(name)
+        if images:
+            return Image.download_files(images)
         return {"message": "image not found"}, 404
 
     @classmethod
-    def download_files(cls, row):
+    def download_files(cls, rows):
         """ download jpg files """
         mem_file = BytesIO()
         with zipfile.ZipFile(mem_file, 'w') as tmpf:
-            for img in row['images']:
-                logging.debug('Resource: [Image] >>> zipping file {}'.format(img))
-                data = zipfile.ZipInfo(img)
-                data.date_time = time.localtime(time.time())[:6]
-                data.compress_type = zipfile.ZIP_DEFLATED
-                tmpf.write(filename=img, compress_type=zipfile.ZIP_DEFLATED)
+            for row in rows:
+                for img in row.images:
+                    logging.debug('Resource: [Image] >>> zipping file %s', img)
+                    data = zipfile.ZipInfo(img)
+                    data.date_time = time.localtime(time.time())[:6]
+                    data.compress_type = zipfile.ZIP_DEFLATED
+                    tmpf.write(filename=img, compress_type=zipfile.ZIP_DEFLATED)
         mem_file.seek(0)
-        return send_file(mem_file, attachment_filename='{}.zip'.format(row['name']),
-                         as_attachment=True)
+        return send_file(mem_file, attachment_filename='{}.zip'.format(rows[0].name),
+                         as_attachment=True, cache_timeout=600, conditional=True)
 
 class ImageList(Resource):
     """ ImageList resource """

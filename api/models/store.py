@@ -21,7 +21,7 @@ class StoreModel(db.Model):
 
     def json(self):
         """ Method to return jsonified response """
-        return {'name': self.name, 'images': [image.json() for image in self.images.all()]}
+        return {'name': self.name, 'images': [image.json() for image in self.query.all().images]}
 
     @jwt_required
     def save_to_db(self):
