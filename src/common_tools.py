@@ -78,7 +78,7 @@ def get_2dimg_cent(s3obj, axis=1, nslices=-1, rot=0):
         end = header['dim'][axis + 1] - 1
     resx = header['pixdim'][2]
     resy = header['pixdim'][3]
-    ## get the slices
+    # get the slices
     logging.info("Slice range: %i to %i", begin, end)
     if axis == 0:
         imgdata = imgdata[int(begin):int(end), :, :]
@@ -197,8 +197,6 @@ def update_db_tcia(sqlcontext, metas, imgs, opts):
         'manufacturer model name', 'pixel spacing-x', 'pixel spacing-y', 'jpgfiles'])
 
     # update PostgreSQL table
-    ## subjtab = "{}.{}".format(opts['schema'], re.sub(r'\W', '_', opts['otags']\
-    ##                                             .replace('ACRIN-DSC-MR-Brain-', 'subject')))
     subjtab = "{}.{}".format(opts['schema'], scanaxis)
     logging.info("======> subjtab: %s", subjtab)
     spdf.write.jdbc(url=opts['dburl'], table=subjtab,

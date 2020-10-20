@@ -78,7 +78,7 @@ def main(args):
         metadata = pydicom.dcmread(glob.glob("{}/*.dcm".format(opts['tmpdir']))[0])
         logging.info(glob.glob("{}/*.dcm".format(opts['tmpdir']))[0])
 
-        ## extract and process the images
+        # extract and process the images
         images = get_2dimg_dcm2niix(niifile)
         if images is None:
             continue

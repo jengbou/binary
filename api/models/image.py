@@ -10,6 +10,7 @@ from mydb import db
 
 class ImageModel(db.Model):
     """ Image Model """
+    bktname = "dataengexpspace"
     __tablename__ = 'images'
     __table_args__ = {"schema": "api"}
     uid = db.Column(db.Integer, primary_key=True)
@@ -28,7 +29,9 @@ class ImageModel(db.Model):
 
     def json(self):
         """ Method to return jsonified response """
-        return {'name': self.name, 'images': self.images}
+        return {'name': self.name,
+                'images': ["https://{}.s3.amazonaws.com{}".format(
+                    self.bktname, img) for img in self.images]}
 
     @jwt_required
     def save_to_db(self):

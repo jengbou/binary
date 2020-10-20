@@ -57,7 +57,7 @@ def main(args):
     opts['otags'] = "hcp_subject_%s"%opts['subjectid']
     opts['jpgkey'] = "{}/{}".format(args.outs3subdir, opts['otags'])
 
-    ### process nifti files from hcp open data
+    # process nifti files from hcp open data
     # specify the s3 obj key of hcp-openaccess file to be processed
     hcpobj = "HCP_1200/{}/unprocessed/3T/T1w_MPR1/{}_3T_T1w_MPR1.nii.gz"\
       .format(opts['subjectid'], opts['subjectid'])
@@ -66,8 +66,6 @@ def main(args):
     for iaxis, atag in enumerate(["sag", "cor", "ax"]):
         images, ress = get_2dimg_cent(s3obj, iaxis, 50)
         logging.info(images.shape)
-        ## opts['dimx'] = images.shape[1]
-        ## opts['dimy'] = images.shape[2]
         opts['resx'] = ress[0]
         opts['resy'] = ress[1]
         images = norm_2dimg(images)
