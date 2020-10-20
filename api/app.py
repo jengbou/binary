@@ -7,7 +7,7 @@ Ref to https://github.com/tecladocode/rest-api-sections/
 
 import os
 import logging
-from flask import Flask
+from flask import Flask, render_template
 from flask_restful import Api
 from flask_jwt import JWT
 from security import authenticate, identity
@@ -39,7 +39,7 @@ jwt = JWT(app, authenticate, identity)
 @app.route('/')
 def hello():
     """ Test function for BINARY API """
-    return {"message": "Hello world! You've reached BINARY API!"}
+    return render_template('index.html')
 
 api.add_resource(Store, '/Store/<string:name>')
 api.add_resource(StoreList, '/Stores')

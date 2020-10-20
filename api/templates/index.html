@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <title>BINARY API</title>
+</head>
+
+<body>
+<h1>Welcome to BINARY: Brain Image graNARY</h1>
+<p class="date">Oct. 19, 2020</p>
+<p> This is an Insight Data Engineering minimal viable project that provides a RESTful API for retrieving brain MRI images.
+So far, it contains a couple of datasets extracted from the following sources:</p>
+<ul>
+  <li><a href="https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=50135264#50135264a6b63241cb4843a291c45ef8a62d2073">
+  TCIA: ACRIN-DSC-MR-Brain (ACRIN ACRIN 6677/RTOG 0625</></li>
+  <li><ahref="https://humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release">
+  Human Connectome Project (1200 Subjects Data Release) </a></li>
+</ul>
+<h2> List of predefined queries: </h2>
+<p> Click on the button to open the dropdown list of queries.
+Please note that it takes about 90 seconds to compress the MRI images
+from about 1000 subjects (total about 3 GB)
+and the download will then start automatically. </p>
+
+<div class="dropdown">
+  <button onclick="myFunction()" class="dropbtn">Example Queries</button>
+<div id="myDropdown" class="dropdown-content">
+  <a href="/Images/notumor_sag">Healthy&nbsp;(sagittal)&nbsp;1092&nbsp;cases</a>
+  <a href="/Images/notumor_cor">Healthy&nbsp;(coronal)&nbsp;1092&nbsp;cases</a>
+  <a href="/Images/notumor_ax">Healthy&nbsp;(axial)&nbsp;1092&nbsp;cases</a>
+  <a href="/Images/withtumor_sag">With&nbsp;tumor&nbsp;(sagittal)&nbsp;394&nbsp;cases</a>
+  <a href="/Images/withtumor_cor">With&nbsp;tumor&nbsp;(coronal)&nbsp;173&nbsp;cases</a>
+  <a href="/Images/withtumor_ax">With&nbsp;tumor&nbsp;(axial)&nbsp;1163&nbsp;cases</a>
+</div>
+</div>
+
+<script>
+function myFunction() {
+document.getElementById("myDropdown").classList.toggle("show");
+}
+
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>

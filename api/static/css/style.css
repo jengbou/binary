@@ -1,0 +1,77 @@
+.serif {
+  font-family: "Times New Roman", Times, serif;
+}
+
+.sansserif {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.monospace {
+    font-family: "Lucida Console", Courier, monospace;
+}
+
+/* dropdown from w3schools */
+.dropbtn {
+    background-color: #3498DB;
+    color: white;
+    padding: 24px 150px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #2980B9;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 16px 64px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown a:hover {
+    background-color: #ddd;
+}
+
+.show {display: block;}
+
+p.date {
+  text-align: right;
+}
+
+body {
+    font-family: "Lucida Console", Courier, monospace;
+    color: blue;
+    line-height: 1.6;
+}
+
+h1 {
+    border: 2px #eee solid;
+    color: brown;
+    text-align: center;
+    padding: 10px;
+}
+
+h2 {
+    border: 1px #eee solid;
+    color: brown;
+    text-align: center;
+    padding: 8px;
+}
