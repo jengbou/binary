@@ -19,7 +19,7 @@ Created as a minimal viable project for Insight Data Engineering 2020C Program.
         - [Flask](README.md#Flask)
         - [Nginx](README.md#Nginx)
         - [uWSGI](README.md#uWSGI)
-1. [Demo]
+1. [Test the API](README.md#Test-the-API)
 
 ## Introduction
 
@@ -122,7 +122,7 @@ pip install -r requirements.txt
 (make sure to change the fields enclosed within "<" ">" accordingly).
 
 
-## Demo
+## Test the API
 
 Now you can test the API by the following:
 
