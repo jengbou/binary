@@ -3,8 +3,9 @@
 A RESTful API for retrieving brain MRI images.
 Created as a minimal viable project for Insight Data Engineering 2020C Program.
 
-[Slidedeck](https://docs.google.com/presentation/d/1ShotzCn2B91CGUAytyrXWHlO4DAl6ki5O5ffQ0Es4KM/edit?usp=sharing)
-<!--, [Recorded Dashboard Demo](t.b.a.), and [Dashboard](http://datangexpspace.club/)-->
+[Slidedeck](https://docs.google.com/presentation/d/1ShotzCn2B91CGUAytyrXWHlO4DAl6ki5O5ffQ0Es4KM/edit?usp=sharing),
+[Dashboard](http://dataengexpspace.club/), and
+[Recorded Dashboard Demo](https://drive.google.com/file/d/1_vzOEVLNmw7Ot4VaZr_nCgF3hSA2DZ8i/view?usp=sharing)
 
 ## Table of Contents
 1. [Introduction](README.md#Introduction)
@@ -65,7 +66,66 @@ cd /usr/local/spark
 ```
 ### PostgreSQL
 
-Instructions to set up postgres to be added.
+#### Install PostreSQL on Ubuntu 18.04
+* Follow the instructions described in this [Creating a Database Cluster](https://www.postgresql.org/docs/12/creating-cluster.html)
+
+* Install postgres
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo mkdir /usr/local/pgsql
+sudo chown postgres:postgres /usr/local/pgsql
+```
+
+
+* Login to postgres
+```bash
+sudo -u postgres -i
+```
+
+
+* Create a .profile to include the following line:
+```bash
+export PATH=/usr/lib/postgresql/10/bin:$PATH
+```
+
+
+* Initialize db
+```bash
+pg_ctl -D /usr/local/pgsql/data initdb
+```
+
+
+* Update settings according to [Simply Install: PostgreSQL](https://blog.insightdatascience.com/simply-install-postgresql-58c1e4ebf252)
+```bash
+/usr/local/pgsql/data/postgresql.conf
+```
+
+Note: If there are other users using the same cluster,
+you might want to create a user with password and login to the user (instead of postgres) for the following steps.
+Change ‘trust’ in Method column (in `/usr/local/pgsql/data/pg_hba.conf`) to ‘md5’ or other authentication method you prefer.
+Restart the service.
+
+```bash
+pg_ctl -D /usr/local/pgsql/data -l pgserver.log restart
+```
+
+
+* Create a dedicated db (e.g., mydb)
+```bash
+createdb mydb -p <port>
+```
+
+
+* Once the previous steps are completed (only need to do it once) you can now connect to the db and create schemas and tables, and test whether your Spark clusters can communicate with the db server.
+
+
+* To manually work on the db
+```bash
+psql -p <port> -d mydb
+```
+
+
 
 ### Run the pipelines
 
