@@ -1,5 +1,5 @@
 """
-Author: Geng-Yuan Jeng <jeengbou@gmail.com>
+Author: Geng-Yuan Jeng <jengbou@gmail.com>
 Insight 2020C DE Project "BINARY: Brain Image graNARY"
 RESTful API app
 """

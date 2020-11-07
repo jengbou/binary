@@ -1,6 +1,6 @@
 #!/bin/python
 """
-Author: Geng-Yuan Jeng <jeengbou@gmail.com>
+Author: Geng-Yuan Jeng <jengbou@gmail.com>
 Minimal Viable Project for Insight 2020C DE Project "BINARY: Brain Image graNARY"
 """
 from __future__ import print_function

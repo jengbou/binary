@@ -1,6 +1,6 @@
 #!/bin/python
 """
-Author: Geng-Yuan Jeng <jeengbou@gmail.com>
+Author: Geng-Yuan Jeng <jengbou@gmail.com>
 Minimal Viable Project for Insight 2020C DE Project "BrainScans"
 This script produces the SeriesInstanceUID to S3 path (object key) mapping.
 Compare with get_tcia_data_onepass.py
